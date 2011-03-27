@@ -4,21 +4,24 @@ import (
 	"bufio"
 	"regexp"
 	"os"
-	)
+)
 
 // Generic token container
 type Token struct {
 	Match string
-	Type uint
+	Type  int
 }
 
 // internal errors
 var (
 	ENOMATCHER = os.NewError("No valid matcher found")
-	EREAD = os.NewError("Error while reading")
-	)
+	EREAD      = os.NewError("Error while reading")
+)
 
-type Matcher regexp.Regexp
+type matcher struct {
+	r  *regexp.Regexp
+	id int
+}
 
 // Identifier for different token types
 const (
@@ -28,19 +31,24 @@ const (
 	MINUS
 	EQUALS
 	COLON
-	)
+	BURN = -1
+)
 
 
 // globals
-var (
-	tokenMatcher = []*Matcher {
-		(*Matcher)(regexp.MustCompile("^[\\-.a-zA-Z0-9]+$")),
+var tokenMatchers = []matcher{
+		matcher{
+			r:  regexp.MustCompile("^[\\-.a-zA-Z0-9]+$"),
+			id: IDENTIFIER,
+		},
+		matcher{
+			r:  regexp.MustCompile("^[\n\t ]+$"),
+			id: BURN,
+		},
 	}
-	)
 
-func (m *Matcher) Match(data []byte) bool {
-	r := (*regexp.Regexp)(m)
-	return r.Match(data)
+func (m *matcher) Match(data []byte) bool {
+	return m.r.Match(data)
 }
 
 
@@ -49,8 +57,7 @@ type Lexer struct {
 }
 
 func NewLexer(input *bufio.Reader) *Lexer {
-	return &Lexer{input: input,
-	}
+	return &Lexer{input: input}
 }
 
 // Returns the next token from the input
@@ -88,7 +95,7 @@ func (l *Lexer) maximizeMatch(ttype uint, chunk *[]byte) os.Error {
 		}
 	}
 	l.input.UnreadByte()
-	*chunk = (*chunk)[0:len(*chunk)-1]
+	*chunk = (*chunk)[0 : len(*chunk)-1]
 	return nil
 }
 
@@ -114,7 +121,7 @@ func (l *Lexer) findMatcher(chunk *[]byte) (uint, os.Error) {
 // the token
 func findTokenType(chunk []byte) (uint, os.Error) {
 	for i, matcher := range tokenMatcher {
-		if(matcher.Match(chunk)) {
+		if matcher.Match(chunk) {
 			return uint(i), nil
 		}
 	}
@@ -125,5 +132,5 @@ func findTokenType(chunk []byte) (uint, os.Error) {
 // a slice with the new field only
 func appendEmptyCell(slice *[]byte) []byte {
 	*slice = append(*slice, 0)
-	return (*slice)[len(*slice)-1:len(*slice)]
+	return (*slice)[len(*slice)-1 : len(*slice)]
 }
