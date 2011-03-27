@@ -1,0 +1,8 @@
+.sconsign.dblite
+*~
+*.swp
+*.8
+*.6
+*.5
+bin
+pkg
