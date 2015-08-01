@@ -4,27 +4,35 @@ const (
 	bitAddrMask = uint64(1<<6) - 1
 )
 
-// BitMemory models a bit-addressable memory. WordSize is only needed if any of
-// the convenience word functions are used.
-type BitMemory struct {
+// BitMemory models a bit-addressable memory with a given word-size.
+type BitMemory interface {
+	Bit(addr uint64) bool
+	SetBit(addr uint64, v bool)
+	Word(n uint64) uint64
+	NumWords() uint64
+}
+
+// SimpleBitMemory implements a BitMemory on a uint64 array. SimpleBitMemory is
+// not thread-safe.
+type SimpleBitMemory struct {
 	Buffer []uint64
 	// WordSize must be a divisor of 64
 	WordSize uint64
 }
 
-func (bm *BitMemory) cellOfBit(addr uint64) *uint64 {
+func (bm *SimpleBitMemory) cellOfBit(addr uint64) *uint64 {
 	return &bm.Buffer[addr>>6]
 }
 
 // Bit returns true if the bit at addr is set
-func (bm *BitMemory) Bit(addr uint64) bool {
+func (bm *SimpleBitMemory) Bit(addr uint64) bool {
 	cell := bm.cellOfBit(addr)
 	bitMask := uint64(1) << (addr & bitAddrMask)
 	return *cell&bitMask != 0
 }
 
 // SetBit sets the bit at addr to v.
-func (bm *BitMemory) SetBit(addr uint64, v bool) {
+func (bm *SimpleBitMemory) SetBit(addr uint64, v bool) {
 	cell := bm.cellOfBit(addr)
 	bitMask := uint64(1) << (addr & bitAddrMask)
 	*cell &= ^bitMask
@@ -34,7 +42,7 @@ func (bm *BitMemory) SetBit(addr uint64, v bool) {
 }
 
 // Word returns the nth word in memory.
-func (bm *BitMemory) Word(n uint64) uint64 {
+func (bm *SimpleBitMemory) Word(n uint64) uint64 {
 	cell := bm.cellOfBit(n * bm.WordSize)
 	mask := (uint64(1) << bm.WordSize) - 1
 	wordsPerCell := 64 / bm.WordSize
@@ -44,13 +52,13 @@ func (bm *BitMemory) Word(n uint64) uint64 {
 }
 
 // NumWords returns the size of memory in number of words.
-func (bm *BitMemory) NumWords() uint64 {
+func (bm *SimpleBitMemory) NumWords() uint64 {
 	return uint64(len(bm.Buffer)) * 64 / bm.WordSize
 }
 
 // AlignMemory resizes the memory buffer to be a multiple of 3*WordSize using
 // append().
-func (bm *BitMemory) AlignMemory() {
+func (bm *SimpleBitMemory) AlignMemory() {
 	if bm.NumWords()%3 != 0 {
 		bm.Buffer = append(bm.Buffer, make([]uint64, 3-(bm.NumWords()%3))...)
 	}
@@ -58,7 +66,7 @@ func (bm *BitMemory) AlignMemory() {
 
 // NandCPU models a NAND minimal computer.
 type NandCPU struct {
-	*BitMemory
+	BitMemory
 	R1, R2 bool
 	PC     uint64
 }

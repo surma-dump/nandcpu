@@ -3,7 +3,7 @@ package main
 import "testing"
 
 func TestBitMemory_Bit_0xAA(t *testing.T) {
-	mem := &BitMemory{
+	mem := &SimpleBitMemory{
 		WordSize: 16,
 		Buffer:   make([]uint64, 2),
 	}
@@ -18,7 +18,7 @@ func TestBitMemory_Bit_0xAA(t *testing.T) {
 }
 
 func TestBitMemory_Bit_0x55(t *testing.T) {
-	mem := &BitMemory{
+	mem := &SimpleBitMemory{
 		WordSize: 16,
 		Buffer:   make([]uint64, 2),
 	}
@@ -33,7 +33,7 @@ func TestBitMemory_Bit_0x55(t *testing.T) {
 }
 
 func TestBitMemory_Bit_0xF0(t *testing.T) {
-	mem := &BitMemory{
+	mem := &SimpleBitMemory{
 		WordSize: 16,
 		Buffer:   make([]uint64, 2),
 	}
@@ -48,7 +48,7 @@ func TestBitMemory_Bit_0xF0(t *testing.T) {
 }
 
 func TestBitMemory_SetBit(t *testing.T) {
-	mem := &BitMemory{
+	mem := &SimpleBitMemory{
 		WordSize: 16,
 		Buffer:   make([]uint64, 2),
 	}
@@ -71,7 +71,7 @@ func TestBitMemory_SetBit(t *testing.T) {
 }
 
 func TestBitMemory_Word(t *testing.T) {
-	mem := &BitMemory{
+	mem := &SimpleBitMemory{
 		WordSize: 8,
 		Buffer:   make([]uint64, 2),
 	}
@@ -87,7 +87,7 @@ func TestBitMemory_Word(t *testing.T) {
 
 func TestNandCPU(t *testing.T) {
 	cpu := &NandCPU{
-		BitMemory: &BitMemory{
+		BitMemory: &SimpleBitMemory{
 			WordSize: 8,
 			Buffer: []uint64{
 				// Word 0: Load bit 61
