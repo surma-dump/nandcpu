@@ -69,3 +69,18 @@ func TestBitMemory_SetBit(t *testing.T) {
 		}
 	}
 }
+
+func TestBitMemory_Word(t *testing.T) {
+	mem := &BitMemory{
+		WordSize: 8,
+		Buffer:   make([]uint64, 2),
+	}
+
+	mem.Buffer[0] = uint64(0x0706050403020100)
+	mem.Buffer[1] = uint64(0x0F0E0D0C0B0A0908)
+	for i := uint64(0); i < 16; i++ {
+		if v := mem.Word(i); v != i {
+			t.Fatalf("Word %d is %x", i, v)
+		}
+	}
+}
