@@ -84,3 +84,28 @@ func TestBitMemory_Word(t *testing.T) {
 		}
 	}
 }
+
+func TestNandCPU(t *testing.T) {
+	cpu := &NandCPU{
+		BitMemory: &BitMemory{
+			WordSize: 8,
+			Buffer: []uint64{
+				// Word 0: Load bit 61
+				// Word 1: Load bit 62
+				// Word 2: Store at bit 63
+				0x00000000003F3E3D,
+			},
+		},
+	}
+	cpu.SetBit(61, true)
+	cpu.SetBit(62, true)
+	// Set bit 63 so we can tell it has been successfully unset after 3 clocks
+	cpu.SetBit(63, true)
+	cpu.Clock()
+	cpu.Clock()
+	cpu.Clock()
+	if cpu.Bit(63) {
+		t.Fatalf("Bit 63 is set")
+	}
+
+}
