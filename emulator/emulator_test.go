@@ -85,7 +85,7 @@ func TestBitMemory_Word(t *testing.T) {
 	}
 }
 
-func TestNandCPU(t *testing.T) {
+func TestNandCPU_8bit(t *testing.T) {
 	cpu := &NandCPU{
 		BitMemory: &SimpleBitMemory{
 			WordSize: 8,
@@ -93,7 +93,7 @@ func TestNandCPU(t *testing.T) {
 				// Word 0: Load bit 61
 				// Word 1: Load bit 62
 				// Word 2: Store at bit 63
-				0x00000000003F3E3D,
+				0x3F3E3D,
 			},
 		},
 	}
@@ -107,5 +107,87 @@ func TestNandCPU(t *testing.T) {
 	if cpu.Bit(63) {
 		t.Fatalf("Bit 63 is set")
 	}
+}
 
+func TestNandCPU_4bit(t *testing.T) {
+	cpu := &NandCPU{
+		BitMemory: &SimpleBitMemory{
+			WordSize: 4,
+			Buffer: []uint64{
+				// Word 0: Load bit 13
+				// Word 1: Load bit 14
+				// Word 2: Store at bit 15
+				0xFED,
+			},
+		},
+	}
+	cpu.SetBit(13, true)
+	cpu.SetBit(14, true)
+	// Set bit 15 so we can tell it has been successfully unset after 3 clocks
+	cpu.SetBit(15, true)
+	cpu.Clock()
+	cpu.Clock()
+	cpu.Clock()
+	if cpu.Bit(15) {
+		t.Fatalf("Bit 15 is set")
+	}
+}
+
+func TestNandCPU_16bit(t *testing.T) {
+	cpu := &NandCPU{
+		BitMemory: &SimpleBitMemory{
+			WordSize: 16,
+			Buffer: []uint64{
+				// Word 0: Load bit 61
+				// Word 1: Load bit 62
+				// Word 2: Store at bit 63
+				0x003F003E003D,
+			},
+		},
+	}
+	cpu.SetBit(61, true)
+	cpu.SetBit(62, true)
+	// Set bit 63 so we can tell it has been successfully unset after 3 clocks
+	cpu.SetBit(63, true)
+	cpu.Clock()
+	cpu.Clock()
+	cpu.Clock()
+	if cpu.Bit(63) {
+		t.Fatalf("Bit 63 is set")
+	}
+}
+
+func TestNandCPU_wraparound(t *testing.T) {
+	cpu := &NandCPU{
+		BitMemory: &SimpleBitMemory{
+			WordSize: 8,
+			Buffer: []uint64{
+				// Word 0: Load bit 29
+				// Word 1: Load bit 30
+				// Word 2: Store at bit 31
+				// ... 0 ...
+				// Word 5: Load bit 27
+				// Word 6: Load bit 28
+				// Word 7: Store at bit 29
+				0x1B1C1D00001F1E1D,
+			},
+		},
+		// Start at word 5
+		PC: 5,
+	}
+	cpu.SetBit(27, true)
+	cpu.SetBit(28, true)
+	// Bit 29 will be set by executing word 5-7
+	cpu.SetBit(30, true)
+	// Set bit 31 so we can tell it has been successfully unset after 6 clocks
+	cpu.SetBit(31, true)
+	cpu.Clock()
+	cpu.Clock()
+	cpu.Clock()
+	cpu.Clock()
+	cpu.Clock()
+	cpu.Clock()
+	if cpu.Bit(31) {
+		t.Fatalf("Bit 31 is set")
+	}
 }
