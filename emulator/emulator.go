@@ -38,24 +38,12 @@ func main() {
 			log.Fatalf("Error openening %s: %s", f, err)
 		}
 	}
-	defer in.Close()
 
-	sbm := &libnandcpu.SimpleBitMemory{
-		Buffer:   make([]uint64, 0, 1024),
-		WordSize: *wordsize,
+	sbm, err := bitMemoryFromFile(in)
+	if err != nil {
+		log.Fatalf("Error reading input: %s", err)
 	}
-	var err error
-	for err != io.EOF {
-		var word uint64
-		err = binary.Read(in, binary.LittleEndian, &word)
-		if err != nil {
-			if err != io.EOF {
-				log.Fatalf("Error reading input: %s", err)
-			}
-			continue
-		}
-		sbm.Buffer = append(sbm.Buffer, word)
-	}
+	sbm.WordSize = *wordsize
 	sbm.AlignMemory()
 
 	cpu := &libnandcpu.NandCPU{BitMemory: sbm}
@@ -67,4 +55,24 @@ func main() {
 	for i := *dumpStart; i < *dumpEnd; i++ {
 		fmt.Printf(pattern, sbm.Word(i))
 	}
+}
+
+func bitMemoryFromFile(rc io.ReadCloser) (*libnandcpu.SimpleBitMemory, error) {
+	defer rc.Close()
+	sbm := &libnandcpu.SimpleBitMemory{
+		Buffer: make([]uint64, 0, 1024),
+	}
+	var err error
+	for err != io.EOF {
+		var chunk uint64
+		err = binary.Read(rc, binary.LittleEndian, &chunk)
+		if err != nil {
+			if err != io.EOF {
+				return nil, err
+			}
+			continue
+		}
+		sbm.Buffer = append(sbm.Buffer, chunk)
+	}
+	return sbm, nil
 }
