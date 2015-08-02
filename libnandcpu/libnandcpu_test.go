@@ -1,4 +1,4 @@
-package emulator
+package libnandcpu
 
 import "testing"
 

@@ -1,4 +1,4 @@
-package emulator
+package libnandcpu
 
 const (
 	bitAddrMask = uint64(1<<6) - 1
