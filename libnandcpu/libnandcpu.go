@@ -87,3 +87,10 @@ func (nc *NandCPU) Clock() {
 	}
 	nc.PC = (nc.PC + 1) % nc.NumWords()
 }
+
+// Step executes a single instruction, i.e. calls Clock() 3 times
+func (nc *NandCPU) Step() {
+	nc.Clock()
+	nc.Clock()
+	nc.Clock()
+}
