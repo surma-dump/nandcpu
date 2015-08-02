@@ -1,4 +1,4 @@
-package main
+package emulator
 
 import "testing"
 
@@ -166,27 +166,26 @@ func TestNandCPU_wraparound(t *testing.T) {
 				// Word 1: Load bit 30
 				// Word 2: Store at bit 31
 				// ... 0 ...
-				// Word 5: Load bit 27
-				// Word 6: Load bit 28
-				// Word 7: Store at bit 29
-				0x1B1C1D00001F1E1D,
+				// Word 21: Load bit 27
+				// Word 22: Load bit 28
+				// Word 23: Store at bit 29
+				0x1E1D000000000000,
+				0x000000000000001F,
+				0x1D1C1B0000000000,
 			},
 		},
-		// Start at word 5
-		PC: 5,
+		// Start at word 9
+		PC: 9,
 	}
 	cpu.SetBit(27, true)
-	cpu.SetBit(28, true)
+	cpu.SetBit(28, false)
 	// Bit 29 will be set by executing word 5-7
 	cpu.SetBit(30, true)
 	// Set bit 31 so we can tell it has been successfully unset after 6 clocks
 	cpu.SetBit(31, true)
-	cpu.Clock()
-	cpu.Clock()
-	cpu.Clock()
-	cpu.Clock()
-	cpu.Clock()
-	cpu.Clock()
+	for i := 0; i < 24; i++ {
+		cpu.Clock()
+	}
 	if cpu.Bit(31) {
 		t.Fatalf("Bit 31 is set")
 	}

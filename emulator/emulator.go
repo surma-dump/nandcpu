@@ -1,4 +1,4 @@
-package main
+package emulator
 
 const (
 	bitAddrMask = uint64(1<<6) - 1
@@ -26,6 +26,9 @@ func (bm *SimpleBitMemory) cellOfBit(addr uint64) *uint64 {
 
 // Bit returns true if the bit at addr is set
 func (bm *SimpleBitMemory) Bit(addr uint64) bool {
+	if addr >= uint64(len(bm.Buffer)<<6) {
+		return false
+	}
 	cell := bm.cellOfBit(addr)
 	bitMask := uint64(1) << (addr & bitAddrMask)
 	return *cell&bitMask != 0
